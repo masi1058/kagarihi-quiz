@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KAGARIHI リリック虫食いクイズ</title>
+  <style>
+    /* ===== リセット・基本 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== 画面切り替え ===== */
+    .screen {
+      display: none;
+      width: 100%;
+      min-height: 100dvh;
+    }
+    .screen.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== タイトル画面 ===== */
+    .title-container {
+      text-align: center;
+      animation: fadeInUp 0.8s ease;
+      padding: 24px;
+    }
+    .title-logo {
+      font-size: clamp(36px, 10vw, 64px);
+      font-weight: 900;
+      letter-spacing: 8px;
+      background: linear-gradient(135deg, #ff6b35, #ff4500, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .title-sub {
+      font-size: clamp(16px, 4.5vw, 22px);
+      color: #aaa;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+    .title-desc {
+      font-size: clamp(12px, 3.5vw, 14px);
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .name-input-wrap {
+      margin-bottom: 32px;
+    }
+    .input-name {
+      background: #13131a;
+      border: 2px solid #2a2a38;
+      border-radius: 12px;
+      color: #e0e0e0;
+      font-size: clamp(15px, 4vw, 18px);
+      padding: 12px 20px;
+      width: min(280px, 80vw);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s ease;
+      letter-spacing: 1px;
+    }
+    .input-name::placeholder {
+      color: #555;
+      font-size: clamp(12px, 3.2vw, 14px);
+    }
+    .input-name:focus {
+      border-color: #ff6b35;
+    }
+    .input-name.input-error {
+      border-color: #ff1744;
+      animation: shake 0.4s ease;
+    }
+
+    /* ===== ボタン ===== */
+    .btn-primary {
+      background: linear-gradient(135deg, #ff6b35, #ff4500);
+      color: #fff;
+      border: none;
+      padding: 14px 40px;
+      font-size: clamp(15px, 4vw, 18px);
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 2px;
+      touch-action: manipulation;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 69, 0, 0.4);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+      opacity: 0.9;
+    }
+
+    /* ===== クイズ画面 ===== */
+    #screen-quiz {
+      flex-direction: column;
+      padding: 20px 16px;
+      align-items: center;
+    }
+    .quiz-header {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 16px;
+    }
+    .quiz-progress {
+      font-size: 15px;
+      color: #888;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .quiz-song {
+      font-size: 13px;
+      color: #ff8c00;
+      text-align: center;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b35, #ff4500);
+      transition: width 0.4s ease;
+      border-radius: 2px;
+    }
+
+    /* ===== 歌詞コンテキスト ===== */
+    .quiz-body {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .quiz-context {
+      font-size: clamp(15px, 4vw, 18px);
+      line-height: 2.0;
+      color: #ccc;
+      padding: 20px 16px;
+      background: #13131a;
+      border-radius: 14px;
+      border: 1px solid #252530;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+      min-height: 60px;
+      text-align: center;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .blank-highlight {
+      display: inline-block;
+      background: rgba(255, 107, 53, 0.2);
+      color: #ff6b35;
+      font-weight: 700;
+      padding: 2px 12px;
+      border-radius: 6px;
+      border-bottom: 3px solid #ff4500;
+      animation: pulse 1.5s infinite;
+    }
+    .blank-answer {
+      display: inline-block;
+      background: rgba(255, 107, 53, 0.15);
+      color: #ff8c00;
+      font-weight: 700;
+      padding: 2px 12px;
+      border-radius: 6px;
+      border-bottom: 3px solid #ff8c00;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* ===== 選択肢 ===== */
+    .quiz-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 400px) {
+      .quiz-choices {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    .choice-btn {
+      background: #1a1a24;
+      color: #ddd;
+      border: 2px solid #2a2a38;
+      padding: 14px 10px;
+      font-size: clamp(14px, 3.8vw, 16px);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+      touch-action: manipulation;
+    }
+    .choice-btn:hover:not(:disabled) {
+      border-color: #ff6b35;
+      background: #1f1f2c;
+    }
+    .choice-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+    .choice-btn:disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+    .choice-btn.correct {
+      border-color: #00c853;
+      background: rgba(0, 200, 83, 0.15);
+      color: #00e676;
+      opacity: 1;
+      font-weight: 700;
+    }
+    .choice-btn.wrong {
+      border-color: #ff1744;
+      background: rgba(255, 23, 68, 0.15);
+      color: #ff5252;
+      opacity: 1;
+    }
+
+    /* ===== フィードバック ===== */
+    .quiz-feedback {
+      font-size: clamp(16px, 4.5vw, 20px);
+      font-weight: 700;
+      min-height: 32px;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+    .feedback-correct {
+      color: #00e676;
+      animation: fadeInUp 0.3s ease;
+    }
+    .feedback-wrong {
+      color: #ff5252;
+      animation: shake 0.4s ease;
+    }
+    .btn-next {
+      margin: 0 auto;
+      padding: 12px 32px;
+      font-size: 15px;
+    }
+
+    /* ===== 結果画面 ===== */
+    .result-container {
+      text-align: center;
+      animation: fadeInUp 0.8s ease;
+      padding: 24px;
+    }
+    .result-grade { margin-bottom: 24px; }
+    .grade-label {
+      display: block;
+      font-size: 15px;
+      color: #888;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+    .result-player-name {
+      display: block;
+      font-size: clamp(20px, 6vw, 24px);
+      font-weight: 700;
+      color: #e0e0e0;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+    .grade-value {
+      display: inline-block;
+      font-size: clamp(48px, 14vw, 72px);
+      font-weight: 900;
+      letter-spacing: 4px;
+    }
+    .grade-1 {
+      background: linear-gradient(135deg, #ffd700, #ffaa00, #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+    }
+    .grade-2 {
+      background: linear-gradient(135deg, #c0c0c0, #e8e8e8, #a8a8a8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .grade-3 {
+      background: linear-gradient(135deg, #cd7f32, #daa06d, #b87333);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .grade-4 { color: #66bb6a; }
+    .grade-5 { color: #42a5f5; }
+    .grade-none { color: #888; }
+    .result-score {
+      font-size: clamp(20px, 6vw, 28px);
+      color: #ccc;
+      margin-bottom: 12px;
+    }
+    .result-detail {
+      font-size: clamp(13px, 3.8vw, 16px);
+      color: #888;
+      margin-bottom: 24px;
+    }
+    .result-message {
+      font-size: clamp(14px, 4vw, 18px);
+      color: #aaa;
+      max-width: 480px;
+      margin: 0 auto 24px;
+      line-height: 1.8;
+    }
+    .result-time {
+      background: #13131a;
+      border: 1px solid #252530;
+      border-radius: 12px;
+      padding: 14px 20px;
+      max-width: 320px;
+      margin: 0 auto 28px;
+    }
+    .time-value {
+      font-size: clamp(18px, 5vw, 22px);
+      font-weight: 700;
+      color: #ff8c00;
+      margin-bottom: 4px;
+    }
+    .time-avg {
+      font-size: clamp(12px, 3.2vw, 14px);
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .time-label {
+      font-size: clamp(14px, 3.8vw, 16px);
+      font-weight: 600;
+      color: #ffcc00;
+      margin-top: 8px;
+    }
+
+    /* ===== アニメーション ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    /* ===== セーフエリア対応 ===== */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      #screen-quiz, .result-container, .title-container {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- タイトル画面 -->
+  <div id="screen-title" class="screen active">
+    <div class="title-container">
+      <div class="title-logo">KAGARIHI</div>
+      <div class="title-sub">リリック虫食いクイズ</div>
+      <div class="title-desc">全5曲・全70問から出題</div>
+      <div class="name-input-wrap">
+        <input type="text" id="input-name" class="input-name" placeholder="あなたの名前を入力" maxlength="20">
+      </div>
+      <button id="btn-start" class="btn-primary">クイズを始める</button>
+    </div>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-header">
+      <div class="quiz-progress">
+        <span id="quiz-current">1</span> / <span id="quiz-total">10</span>
+      </div>
+      <div class="quiz-song">&#9834; <span id="quiz-song-name"></span></div>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+    <div class="quiz-body">
+      <div id="quiz-context" class="quiz-context"></div>
+      <div id="quiz-choices" class="quiz-choices"></div>
+      <div id="quiz-feedback" class="quiz-feedback"></div>
+      <button id="btn-next" class="btn-primary btn-next" style="display:none;">次の問題へ</button>
+    </div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="screen-result" class="screen">
+    <div class="result-container">
+      <div id="result-grade" class="result-grade"></div>
+      <div id="result-score" class="result-score"></div>
+      <div id="result-detail" class="result-detail"></div>
+      <div id="result-message" class="result-message"></div>
+      <div id="result-time" class="result-time"></div>
+      <button id="btn-retry" class="btn-primary">もう一度挑戦する</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== 問題データ =====
+    const questions = [
+      // ===== 鴉 (12問) =====
+      { song: "鴉", context: "【＿＿＿】、風が過ぎた\n馬鹿ども割を喰うか", blank: "ボロ羽根", choices: ["ボロ羽根", "クロ羽根", "カタ羽根", "サビ羽根"] },
+      { song: "鴉", context: "ボロ羽根、風が過ぎた\n馬鹿ども【＿＿＿】\n雨さえ快楽へと", blank: "割を喰うか", choices: ["割を喰うか", "罰を喰うか", "損を喰うか", "毒を喰うか"] },
+      { song: "鴉", context: "雨さえ【＿＿＿】へと\n蹴とばす屋上", blank: "快楽", choices: ["快楽", "天国", "地獄", "極楽"] },
+      { song: "鴉", context: "雨さえ快楽へと\n蹴とばす【＿＿＿】\nナマリダマ　空へ　空へ", blank: "屋上", choices: ["屋上", "路上", "地上", "頂上"] },
+      { song: "鴉", context: "【＿＿＿】　空へ　空へ\n飛び込んだ\nギラついて黒点の様", blank: "ナマリダマ", choices: ["ナマリダマ", "ハガネダマ", "クロガネダマ", "アラレダマ"] },
+      { song: "鴉", context: "ナマリダマ　空へ　空へ\n飛び込んだ\nギラついて【＿＿＿】の様\n羽根拡ぐ", blank: "黒点", choices: ["黒点", "黒雲", "黒鉄", "黒鳥"] },
+      { song: "鴉", context: "ギラついて黒点の様\n【＿＿＿】\n明日へ 明日へ", blank: "羽根拡ぐ", choices: ["羽根拡ぐ", "羽根煽ぐ", "羽根閉じる", "羽根震う"] },
+      { song: "鴉", context: "羽根拡ぐ 明日へ 明日へ\n【＿＿＿】\n僕は 僕は鴉", blank: "搔い縫ってんだ", choices: ["搔い縫ってんだ", "搔い潜ってんだ", "噛み付いてんだ", "食い下がってんだ"] },
+      { song: "鴉", context: "ナマリダマ　生きる 生きる\n間違いも【＿＿＿】で上風まま", blank: "伏線", choices: ["伏線", "布石", "合図", "前兆"] },
+      { song: "鴉", context: "間違いも伏線で【＿＿＿】まま\n羽根煽ぐ 今日を 今日を", blank: "上風", choices: ["上風", "追風", "向風", "横風"] },
+      { song: "鴉", context: "羽根煽ぐ 今日を 今日を\n【＿＿＿】\n僕は 僕は・・・", blank: "突き抜けんだ", choices: ["突き抜けんだ", "突き進むんだ", "駆け抜けんだ", "飛び越えんだ"] },
+      { song: "鴉", context: "ナマリダマ　空へ　空へ\n【＿＿＿】\nギラついて黒点の様", blank: "飛び込んだ", choices: ["飛び込んだ", "飛び立った", "飛び出した", "飛び散った"] },
+
+      // ===== エンドロールに花束を (18問) =====
+      { song: "エンドロールに花束を", context: "【＿＿＿】の終わり\n紡ぐ言葉\nありがとうも語り尽くした", blank: "映画", choices: ["映画", "物語", "季節", "舞台"] },
+      { song: "エンドロールに花束を", context: "映画の終わり\n【＿＿＿】\nありがとうも語り尽くした", blank: "紡ぐ言葉", choices: ["紡ぐ言葉", "綴る言葉", "贈る言葉", "残す言葉"] },
+      { song: "エンドロールに花束を", context: "ありがとうも語り尽くした\n【＿＿＿】も語り尽くした\nエンドロールに投げつける", blank: "ごめんね", choices: ["ごめんね", "さよなら", "忘れない", "許してね"] },
+      { song: "エンドロールに花束を", context: "ごめんねも語り尽くした\nエンドロールに【＿＿＿】\n花束を 花束を", blank: "投げつける", choices: ["投げつける", "投げかける", "突きつける", "差し出せる"] },
+      { song: "エンドロールに花束を", context: "知らない【＿＿＿】を迎えた\n憶うほど悔う全て\n結果論でしかなくて", blank: "朝", choices: ["朝", "夜", "日", "春"] },
+      { song: "エンドロールに花束を", context: "知らない朝を迎えた\n憶うほど【＿＿＿】全て\n結果論でしかなくて", blank: "悔う", choices: ["悔う", "追う", "問う", "負う"] },
+      { song: "エンドロールに花束を", context: "憶うほど悔う全て\n【＿＿＿】でしかなくて", blank: "結果論", choices: ["結果論", "感情論", "理想論", "正反対"] },
+      { song: "エンドロールに花束を", context: "知らない夜を恐れた\n揺らぐ【＿＿＿】記憶を\n涙で塗りつぶす", blank: "夏", choices: ["夏", "冬", "春", "秋"] },
+      { song: "エンドロールに花束を", context: "知らない夜を恐れた\n揺らぐ夏記憶を\n【＿＿＿】", blank: "涙で塗りつぶす", choices: ["涙で塗りつぶす", "涙で洗い流す", "涙で押し流す", "涙で埋め尽くす"] },
+      { song: "エンドロールに花束を", context: "大切と、変わらずと\n【＿＿＿】こと、与えること", blank: "望む", choices: ["望む", "願う", "祈る", "叫ぶ"] },
+      { song: "エンドロールに花束を", context: "フィルムに写ってた感情\n僕らの証明\n【＿＿＿】", blank: "面影", choices: ["面影", "残像", "名残", "余韻"] },
+      { song: "エンドロールに花束を", context: "駆け抜けた 二人軌跡\n拙いまま\n【＿＿＿】", blank: "有終の美", choices: ["有終の美", "最後の日", "永遠の日", "別離の美"] },
+      { song: "エンドロールに花束を", context: "予想できなかったあの日に\nあなた【＿＿＿】\n記憶の海へと潜る", blank: "なんて言ったの", choices: ["なんて言ったの", "なんで笑ったの", "なんで泣いたの", "どこへ行ったの"] },
+      { song: "エンドロールに花束を", context: "あなたなんて言ったの\n【＿＿＿】の海へと潜る", blank: "記憶", choices: ["記憶", "後悔", "感情", "追憶"] },
+      { song: "エンドロールに花束を", context: "僕を忘れた君が\n寒がる【＿＿＿】記憶を\n涙で塗りつぶす", blank: "冬", choices: ["冬", "夏", "秋", "春"] },
+      { song: "エンドロールに花束を", context: "同じ歩み、眺めてわ\n笑いあえたね\n【＿＿＿】", blank: "嘘吐き", choices: ["嘘吐き", "泣き虫", "弱虫", "臆病者"] },
+      { song: "エンドロールに花束を", context: "映画が終わる 叫ぶ歌は\n【＿＿＿】も語り尽くした\nエンドロールに投げつける", blank: "愛してる", choices: ["愛してる", "ありがとう", "さよなら", "ごめんね"] },
+      { song: "エンドロールに花束を", context: "【＿＿＿】も さよならも\nさよならだ", blank: "さよなら", choices: ["さよなら", "ありがとう", "ごめんね", "愛してる"] },
+
+      // ===== ハシル、ハシル (10問) =====
+      { song: "ハシル、ハシル", context: "【＿＿＿】を積み重ねては、\nコトバに沈んで", blank: "言葉", choices: ["言葉", "想い", "記憶", "日々"] },
+      { song: "ハシル、ハシル", context: "言葉を積み重ねては、\nコトバに沈んで\n止まる想いを募らせて、\n【＿＿＿】の瓦礫に埋る", blank: "オモイデ", choices: ["オモイデ", "コトバ", "ココロ", "セカイ"] },
+      { song: "ハシル、ハシル", context: "止まる想いを募らせて、\nオモイデの【＿＿＿】に埋る", blank: "瓦礫", choices: ["瓦礫", "残骸", "破片", "底"] },
+      { song: "ハシル、ハシル", context: "【＿＿＿】な日常を・・・\n壊して走る、衝動叫ぶ", blank: "無意味", choices: ["無意味", "退屈", "空虚", "平凡"] },
+      { song: "ハシル、ハシル", context: "無意味な日常を・・・\n壊して走る、【＿＿＿】叫ぶ、\nヒトリセカイの枢", blank: "衝動", choices: ["衝動", "感情", "本能", "情熱"] },
+      { song: "ハシル、ハシル", context: "壊して走る、衝動叫ぶ、\nヒトリセカイの【＿＿＿】", blank: "枢", choices: ["枢", "果て", "底", "芯"] },
+      { song: "ハシル、ハシル", context: "そうさ今日も、こうして\n【＿＿＿】鳴らす\n感情だけを晒して", blank: "コード", choices: ["コード", "ビート", "ノイズ", "コール"] },
+      { song: "ハシル、ハシル", context: "こうしてコード鳴らす\n【＿＿＿】だけを晒して", blank: "感情", choices: ["感情", "衝動", "本音", "感傷"] },
+      { song: "ハシル、ハシル", context: "【＿＿＿】セカイを走る今、\n響かせ無垢なラブソングを", blank: "ツギハギ", choices: ["ツギハギ", "バラバラ", "ガラクタ", "デタラメ"] },
+      { song: "ハシル、ハシル", context: "ツギハギセカイを走る今、\n響かせ【＿＿＿】なラブソングを", blank: "無垢", choices: ["無垢", "素直", "純粋", "無心"] },
+
+      // ===== Blue Flame (16問) =====
+      { song: "Blue Flame", context: "ユメは夢で「【＿＿＿】」だって\n横にいた人のコトバ", blank: "憧れ", choices: ["憧れ", "理想", "幻", "願望"] },
+      { song: "Blue Flame", context: "ユメは夢で「憧れ」だって\n【＿＿＿】にいた人のコトバ", blank: "横", choices: ["横", "隣", "前", "後"] },
+      { song: "Blue Flame", context: "横にいた人のコトバ\n積んだ想い\n【＿＿＿】", blank: "キリがない", choices: ["キリがない", "果てがない", "底がない", "先がない"] },
+      { song: "Blue Flame", context: "【＿＿＿】になって、満たされて\n止まれば楽になれるのか", blank: "空", choices: ["空", "無", "嘘", "闇"] },
+      { song: "Blue Flame", context: "空になって、満たされて\n止まれば楽になれるのか\n【＿＿＿】した光に焦がる", blank: "反射", choices: ["反射", "散乱", "拡散", "屈折"] },
+      { song: "Blue Flame", context: "目を瞑って、【＿＿＿】\n躓きも流す涙も", blank: "心描いて", choices: ["心描いて", "心聴いて", "心込めて", "心寄せて"] },
+      { song: "Blue Flame", context: "躓きも流す涙も\n全部全部\n【＿＿＿】\n本物を鳴らす世界で、心描いて", blank: "食べてしまえば良いから", choices: ["食べてしまえば良いから", "忘れてしまえば良いから", "捨ててしまえば良いから", "壊してしまえば良いから"] },
+      { song: "Blue Flame", context: "【＿＿＿】を鳴らす世界で、心描いて\nあなたに歌い続けるんだ", blank: "本物", choices: ["本物", "本音", "本当", "本心"] },
+      { song: "Blue Flame", context: "あなたに歌い続けるんだ\nたった一つ\n譲れない【＿＿＿】", blank: "青い炎", choices: ["青い炎", "熱い炎", "赤い炎", "強い炎"] },
+      { song: "Blue Flame", context: "夢はユメで「【＿＿＿】」だって\n背中見た人が選ぶ", blank: "見るもの", choices: ["見るもの", "追うもの", "叶うもの", "消えるもの"] },
+      { song: "Blue Flame", context: "目が覚めて、【＿＿＿】？", blank: "泡沫", choices: ["泡沫", "幻想", "残像", "蜃気楼"] },
+      { song: "Blue Flame", context: "手放して、軽くなって\n【＿＿＿】は、何なれるか", blank: "霞んで", choices: ["霞んで", "滲んで", "揺れて", "消えて"] },
+      { song: "Blue Flame", context: "手放して、軽くなって\n霞んでは、何なれるか\n揺らめいた【＿＿＿】、目指して", blank: "明り", choices: ["明り", "灯り", "光", "日差し"] },
+      { song: "Blue Flame", context: "【＿＿＿】を澄まして、心を聴いて\n後悔も褪せた記憶も", blank: "耳", choices: ["耳", "目", "息", "声"] },
+      { song: "Blue Flame", context: "後悔も【＿＿＿】記憶も\n全部全部\n食べてしまえば良いから", blank: "褪せた", choices: ["褪せた", "枯れた", "錆びた", "古びた"] },
+      { song: "Blue Flame", context: "本物を鳴らす世界で、心を聴いて\nあなたに歌い続けるんだ\nたった一つ\n【＿＿＿】青い炎", blank: "揺るげない", choices: ["揺るげない", "譲れない", "止まらない", "消えはしない"] },
+
+      // ===== 何でもない今日の日に、 (14問) =====
+      { song: "何でもない今日の日に、", context: "心ヒトリの痛み悲し\n【＿＿＿】が眩しいや", blank: "太陽", choices: ["太陽", "朝日", "夕日", "日差し"] },
+      { song: "何でもない今日の日に、", context: "あなたの声、優しい温度\n【＿＿＿】\n手を伸ばしてみるんだ", blank: "三日月", choices: ["三日月", "半月", "新月", "満月"] },
+      { song: "何でもない今日の日に、", context: "あなたの声、【＿＿＿】温度\n三日月\n手を伸ばしてみるんだ", blank: "優しい", choices: ["優しい", "温かい", "眩しい", "愛しい"] },
+      { song: "何でもない今日の日に、", context: "【＿＿＿】なんて無いなって\n幾度した後悔だ", blank: "当たり前", choices: ["当たり前", "永遠", "約束", "明日"] },
+      { song: "何でもない今日の日に、", context: "当たり前なんて無いなって\n幾度した【＿＿＿】だ\n理由なんてもう要りやしないさ", blank: "後悔", choices: ["後悔", "決意", "覚悟", "反省"] },
+      { song: "何でもない今日の日に、", context: "【＿＿＿】なんてもう要りやしないさ\n声を枯らして、名前を呼んで", blank: "理由", choices: ["理由", "言葉", "意味", "答え"] },
+      { song: "何でもない今日の日に、", context: "声を枯らして、名前を呼んで\n届く場所にあなたいる【＿＿＿】に", blank: "奇跡", choices: ["奇跡", "軌跡", "景色", "世界"] },
+      { song: "何でもない今日の日に、", context: "「ありがとう」\nそう素直に言えるよ\n何でもない今日の日に、\n【＿＿＿】", blank: "歌える歌がある", choices: ["歌える歌がある", "歌える声がある", "笑える日がある", "届ける歌がある"] },
+      { song: "何でもない今日の日に、", context: "季節めぐる【＿＿＿】鳴らし\n揺らめきが心地良くて", blank: "リズム", choices: ["リズム", "テンポ", "ビート", "パルス"] },
+      { song: "何でもない今日の日に、", context: "あなたの癖、日々の感情\n【＿＿＿】\n描いては足してみるんだ", blank: "色彩", choices: ["色彩", "景色", "情景", "光景"] },
+      { song: "何でもない今日の日に、", context: "またねを言えるって奇跡って\n【＿＿＿】する感情だ", blank: "銘記", choices: ["銘記", "感銘", "刻印", "胸打"] },
+      { song: "何でもない今日の日に、", context: "「ありがとう」\nそう素直に言えるよ\n何でもない今日の日に、\n【＿＿＿】じゃない、愛がある", blank: "無償", choices: ["無償", "無情", "無常", "無限"] },
+      { song: "何でもない今日の日に、", context: "僕がいて、あなたがいて\n【＿＿＿】を言葉に出して", blank: "歓び", choices: ["歓び", "想い", "感謝", "祈り"] },
+      { song: "何でもない今日の日に、", context: "僕がいて、あなたがいて\n歓びを言葉に出して\n【＿＿＿】明日を見れたら\nそうさ、ありふれた大切だ", blank: "かが寄って", choices: ["かが寄って", "寄り添って", "身を寄せて", "肩寄せて"] }
+    ];
+
+    // ===== ユーティリティ =====
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // ===== 画面管理 =====
+    const screens = {
+      title: document.getElementById('screen-title'),
+      quiz: document.getElementById('screen-quiz'),
+      result: document.getElementById('screen-result')
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[name].classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // ===== クイズ状態 =====
+    const TOTAL_QUESTIONS = 10;
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    // ===== 時間計測 =====
+    let quizStartTime = 0;
+    let totalElapsedMs = 0;
+
+    // ===== ユーザー名 =====
+    let playerName = '';
+
+    function pickQuestions() {
+      const shuffled = shuffleArray(questions);
+      return shuffled.slice(0, TOTAL_QUESTIONS);
+    }
+
+    // ===== クイズ開始 =====
+    document.getElementById('btn-start').addEventListener('click', () => {
+      const nameInput = document.getElementById('input-name');
+      playerName = nameInput.value.trim();
+      if (!playerName) {
+        nameInput.classList.add('input-error');
+        nameInput.focus();
+        return;
+      }
+      nameInput.classList.remove('input-error');
+      currentQuestions = pickQuestions();
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+      totalElapsedMs = 0;
+      quizStartTime = Date.now();
+      document.getElementById('quiz-total').textContent = TOTAL_QUESTIONS;
+      showScreen('quiz');
+      renderQuestion();
+    });
+
+    // ===== 問題描画 =====
+    function renderQuestion() {
+      answered = false;
+      const q = currentQuestions[currentIndex];
+
+      document.getElementById('quiz-current').textContent = currentIndex + 1;
+      document.getElementById('quiz-song-name').textContent = q.song;
+      document.getElementById('progress-fill').style.width =
+        ((currentIndex) / TOTAL_QUESTIONS * 100) + '%';
+
+      const contextEl = document.getElementById('quiz-context');
+      const contextHtml = q.context
+        .replace(/\n/g, '<br>')
+        .replace('【＿＿＿】', '<span class="blank-highlight">？？？</span>');
+      contextEl.innerHTML = contextHtml;
+
+      const choicesEl = document.getElementById('quiz-choices');
+      choicesEl.innerHTML = '';
+      const shuffledChoices = shuffleArray(q.choices);
+      shuffledChoices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = choice;
+        btn.addEventListener('click', () => handleAnswer(btn, choice, q));
+        choicesEl.appendChild(btn);
+      });
+
+      document.getElementById('quiz-feedback').innerHTML = '';
+      document.getElementById('quiz-feedback').className = 'quiz-feedback';
+      document.getElementById('btn-next').style.display = 'none';
+    }
+
+    // ===== 回答処理 =====
+    function handleAnswer(btnEl, choice, q) {
+      if (answered) return;
+      answered = true;
+
+      const isCorrect = choice === q.blank;
+      const feedbackEl = document.getElementById('quiz-feedback');
+      const allBtns = document.querySelectorAll('.choice-btn');
+
+      allBtns.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === q.blank) {
+          btn.classList.add('correct');
+        } else if (btn === btnEl && !isCorrect) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      const contextEl = document.getElementById('quiz-context');
+      contextEl.innerHTML = q.context
+        .replace(/\n/g, '<br>')
+        .replace('【＿＿＿】', '<span class="blank-answer">' + q.blank + '</span>');
+
+      if (isCorrect) {
+        score++;
+        feedbackEl.innerHTML = '正解！';
+        feedbackEl.className = 'quiz-feedback feedback-correct';
+      } else {
+        feedbackEl.innerHTML = '不正解… 正解は「' + q.blank + '」';
+        feedbackEl.className = 'quiz-feedback feedback-wrong';
+      }
+
+      document.getElementById('btn-next').style.display = 'block';
+    }
+
+    // ===== 次の問題 =====
+    document.getElementById('btn-next').addEventListener('click', () => {
+      currentIndex++;
+      if (currentIndex >= TOTAL_QUESTIONS) {
+        showResult();
+      } else {
+        renderQuestion();
+      }
+    });
+
+    // ===== 時間フォーマット =====
+    function formatTime(ms) {
+      var totalSec = Math.floor(ms / 1000);
+      var min = Math.floor(totalSec / 60);
+      var sec = totalSec % 60;
+      if (min > 0) return min + '分' + sec + '秒';
+      return sec + '秒';
+    }
+
+    function getTimeRank(ms) {
+      var avgSec = (ms / 1000) / TOTAL_QUESTIONS;
+      if (avgSec <= 3) return 'lightning';
+      if (avgSec <= 5) return 'fast';
+      if (avgSec <= 10) return 'normal';
+      if (avgSec <= 20) return 'slow';
+      return 'very_slow';
+    }
+
+    function getTimeLabel(timeRank) {
+      switch (timeRank) {
+        case 'lightning': return '⚡ 神速クリア';
+        case 'fast': return '🔥 スピードクリア';
+        case 'normal': return '';
+        case 'slow': return '🐢 じっくり回答';
+        case 'very_slow': return '🐌 のんびり回答';
+      }
+    }
+
+    // ===== 結果画面 =====
+    function showResult() {
+      totalElapsedMs = Date.now() - quizStartTime;
+      showScreen('result');
+      document.getElementById('progress-fill').style.width = '100%';
+
+      var percentage = Math.round((score / TOTAL_QUESTIONS) * 100);
+      var timeRank = getTimeRank(totalElapsedMs);
+
+      var grade, gradeClass, message;
+
+      if (score === TOTAL_QUESTIONS && (timeRank === 'lightning' || timeRank === 'fast')) {
+        grade = '1級'; gradeClass = 'grade-1';
+        message = 'KAGARIHI完全制覇！スピードも完璧、あなたは真のリリックマスターです！';
+      } else if (score === TOTAL_QUESTIONS) {
+        grade = '2級'; gradeClass = 'grade-2';
+        message = '全問正解おめでとう！もっと速く答えられれば1級も夢じゃない！';
+      } else if (percentage >= 85) {
+        grade = '2級'; gradeClass = 'grade-2';
+        message = '素晴らしい！KAGARIHIの歌詞がしっかり身に染みています！';
+      } else if (percentage >= 70) {
+        grade = '3級'; gradeClass = 'grade-3';
+        message = 'なかなかの実力！もう少しでKAGARIHI上級者です！';
+      } else if (percentage >= 50) {
+        grade = '4級'; gradeClass = 'grade-4';
+        message = 'KAGARIHIファンとしてまだまだ伸びしろあり！もっと聴き込もう！';
+      } else if (percentage >= 30) {
+        grade = '5級'; gradeClass = 'grade-5';
+        message = 'KAGARIHIの世界に踏み入れたばかり。これからもっとハマろう！';
+      } else {
+        grade = '級外'; gradeClass = 'grade-none';
+        message = 'まずはKAGARIHIの曲をたくさん聴いてみよう！';
+      }
+
+      document.getElementById('result-grade').innerHTML =
+        '<span class="grade-label">KAGARIHI リリック虫食いクイズ</span>' +
+        '<span class="result-player-name">' + playerName + '</span>' +
+        '<span class="grade-value ' + gradeClass + '">' + grade + '</span>';
+      document.getElementById('result-score').textContent =
+        score + ' / ' + TOTAL_QUESTIONS + ' 問正解（' + percentage + '%）';
+      document.getElementById('result-detail').textContent = getDetailText(score);
+      document.getElementById('result-message').textContent = message;
+
+      var timeText = '回答時間：' + formatTime(totalElapsedMs);
+      var avgText = '（1問あたり平均 ' + (totalElapsedMs / 1000 / TOTAL_QUESTIONS).toFixed(1) + '秒）';
+      var timeLabel = getTimeLabel(timeRank);
+      document.getElementById('result-time').innerHTML =
+        '<div class="time-value">' + timeText + '</div>' +
+        '<div class="time-avg">' + avgText + '</div>' +
+        (timeLabel ? '<div class="time-label">' + timeLabel + '</div>' : '');
+    }
+
+    function getDetailText(score) {
+      if (score === TOTAL_QUESTIONS) return '全問正解 - パーフェクト！';
+      if (score >= 9) return '正解数 ' + score + ' - あと少しで完全制覇！';
+      if (score >= 7) return '正解数 ' + score + ' - 堂々たる成績です！';
+      if (score >= 5) return '正解数 ' + score + ' - 半分以上クリア！';
+      return '正解数 ' + score + ' - 次回はもっといけるはず！';
+    }
+
+    // ===== リトライ =====
+    document.getElementById('btn-retry').addEventListener('click', () => {
+      showScreen('title');
+    });
+  </script>
+</body>
+</html>
