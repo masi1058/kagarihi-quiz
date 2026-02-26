@@ -358,79 +358,6 @@
       margin-top: 8px;
     }
 
-    /* ===== メンバーコメント ===== */
-    .member-comment {
-      background: #13131a;
-      border: 1px solid #252530;
-      border-radius: 16px;
-      padding: 20px;
-      max-width: 420px;
-      margin: 0 auto 24px;
-      animation: fadeInUp 0.8s ease 0.3s both;
-    }
-    .member-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-    }
-    .member-avatar {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 900;
-      color: #fff;
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      background-size: cover;
-      background-position: center;
-    }
-    .member-info {
-      flex: 1;
-      text-align: left;
-    }
-    .member-name {
-      font-size: clamp(14px, 3.8vw, 16px);
-      font-weight: 700;
-      color: #e0e0e0;
-      margin-bottom: 2px;
-    }
-    .member-role {
-      font-size: clamp(11px, 3vw, 12px);
-      color: #888;
-      margin-bottom: 8px;
-    }
-    .member-handle {
-      color: #ff8c00;
-      text-decoration: none;
-    }
-    .member-handle:hover {
-      text-decoration: underline;
-    }
-    .member-speech {
-      font-size: clamp(13px, 3.5vw, 15px);
-      color: #ccc;
-      line-height: 1.7;
-      background: #1a1a24;
-      border-radius: 12px;
-      padding: 12px 14px;
-      position: relative;
-      margin-top: 4px;
-    }
-    .member-speech::before {
-      content: '';
-      position: absolute;
-      top: -6px;
-      left: 20px;
-      width: 12px;
-      height: 12px;
-      background: #1a1a24;
-      transform: rotate(45deg);
-    }
-
     /* ===== アニメーション ===== */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -492,8 +419,7 @@
       <div id="result-score" class="result-score"></div>
       <div id="result-detail" class="result-detail"></div>
       <div id="result-message" class="result-message"></div>
-      <div id="member-comment" class="member-comment"></div>
-      <div id="result-time" class="result-time"></div>
+<div id="result-time" class="result-time"></div>
       <button id="btn-retry" class="btn-primary">もう一度挑戦する</button>
     </div>
   </div>
@@ -581,82 +507,6 @@
       { song: "何でもない今日の日に、", context: "僕がいて、あなたがいて\n【＿＿＿】を言葉に出して", blank: "歓び", choices: ["歓び", "想い", "感謝", "祈り"] },
       { song: "何でもない今日の日に、", context: "僕がいて、あなたがいて\n歓びを言葉に出して\n【＿＿＿】明日を見れたら\nそうさ、ありふれた大切だ", blank: "かが寄って", choices: ["かが寄って", "寄り添って", "身を寄せて", "肩寄せて"] }
     ];
-
-    // ===== メンバーデータ =====
-    const members = [
-      {
-        name: 'ゆずぴ',
-        role: 'Vo/Gt',
-        handle: '@yuzpi_v',
-        handleUrl: 'https://x.com/yuzpi_v',
-        color: '#ff6b35',
-        initial: 'Y',
-        image: 'images/yuzpi.png',
-        comments: {
-          '1級': '完璧すぎて震える…！俺たちの歌詞、全部あなたの中に生きてるんだな…！',
-          '2級': 'すごいじゃん！！ほぼ完璧！KAGARIHIの歌詞、ちゃんと届いてるんだな！',
-          '3級': 'おお、なかなかやるね！もっと聴き込めば絶対上いける！一緒に頑張ろう！',
-          '4級': 'まだまだこれから！俺たちの曲、もっともっと聴いてくれよな！',
-          '5級': 'ここからがスタートだ！KAGARIHIの曲、たくさん聴いてまた挑戦してくれ！',
-          '級外': '全然大丈夫！まずは好きな曲見つけるところからだ！待ってるぜ！'
-        }
-      },
-      {
-        name: 'disorder!',
-        role: 'Gt',
-        handle: '@disorder_SUB',
-        handleUrl: 'https://x.com/disorder_SUB',
-        color: '#9c27b0',
-        initial: 'D',
-        image: 'images/disorder.png',
-        comments: {
-          '1級': '…マジか。俺より歌詞覚えてるじゃん。ちょっと悔しいわ',
-          '2級': 'へぇ、やるじゃん。正直俺もあやしいとこあるのに',
-          '3級': '悪くないね。まあ俺も全問正解できるかって言われると…',
-          '4級': 'まあそんなもんでしょ。俺も怪しいし気にすんな',
-          '5級': 'ドンマイ。…いや俺もやったら同じくらいかも',
-          '級外': '…大丈夫、俺もたぶん怪しい。一緒に聴き直そ'
-        }
-      },
-      {
-        name: '福井柚華',
-        role: 'Ba',
-        handle: '@fukuiyuzuha__V',
-        handleUrl: 'https://x.com/fukuiyuzuha__V',
-        color: '#e91e63',
-        initial: '柚',
-        image: 'images/yuzuha.png',
-        comments: {
-          '1級': 'な、なんということだ…！全問正解だと…！？キミはKAGARIHIの歌詞の申し子か！！',
-          '2級': 'おおっ！この成績は見事としか言いようがない！盛大な拍手を送ろう！',
-          '3級': 'ふむ、なかなかの腕前だね！あと少しの精進で更なる高みへ…！',
-          '4級': 'まだまだ伸びしろがあるってことだよ！期待しているぞ！',
-          '5級': '焦ることはない！我々の楽曲をじっくり味わってからまた来るがよい！',
-          '級外': '待ってくれたまえ！まずは曲を聴くところから始めようではないか！'
-        }
-      },
-      {
-        name: 'Mottyan',
-        role: 'Dr',
-        handle: '@Mottyan_24',
-        handleUrl: 'https://x.com/Mottyan_24',
-        color: '#42a5f5',
-        initial: 'M',
-        image: 'images/mottyan.png',
-        comments: {
-          '1級': 'えっ全問正解…？俺より覚えてるじゃん…',
-          '2級': 'すごいね…。俺やったらこんな取れない気がする',
-          '3級': 'いい感じ。俺もこれくらいは取りたい…取れるかな…',
-          '4級': 'まあまあじゃん。俺も多分このくらい〜',
-          '5級': 'どんまい〜。いや俺もあんま自信ないし…',
-          '級外': 'あー…。いや俺もやばいかも正直…'
-        }
-      }
-    ];
-
-    function getRandomMember() {
-      return members[Math.floor(Math.random() * members.length)];
-    }
 
     // ===== ユーティリティ =====
     function shuffleArray(array) {
@@ -868,23 +718,6 @@
         score + ' / ' + TOTAL_QUESTIONS + ' 問正解（' + percentage + '%）';
       document.getElementById('result-detail').textContent = getDetailText(score);
       document.getElementById('result-message').textContent = message;
-
-      // メンバーコメント表示
-      var member = getRandomMember();
-      var memberComment = member.comments[grade];
-      var avatarStyle = member.image
-        ? 'background-image:url(' + member.image + ')'
-        : 'background:' + member.color;
-      var avatarContent = member.image ? '' : member.initial;
-      document.getElementById('member-comment').innerHTML =
-        '<div class="member-card">' +
-          '<div class="member-avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
-          '<div class="member-info">' +
-            '<div class="member-name">' + member.name + '  <span class="member-role">' + member.role + '</span></div>' +
-            '<div class="member-role"><a class="member-handle" href="' + member.handleUrl + '" target="_blank" rel="noopener">' + member.handle + '</a></div>' +
-            '<div class="member-speech">「' + memberComment + '」</div>' +
-          '</div>' +
-        '</div>';
 
       var timeText = '回答時間：' + formatTime(totalElapsedMs);
       var avgText = '（1問あたり平均 ' + (totalElapsedMs / 1000 / TOTAL_QUESTIONS).toFixed(1) + '秒）';
